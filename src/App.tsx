@@ -1,12 +1,11 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { Download, Link2, Loader2 } from 'lucide-react'
-import html2pdf from 'html2pdf.js'
+import { generatePdfFromUrl } from './utils/pdfGenerator'
 
 function App() {
   const [url, setUrl] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const iframeRef = useRef<HTMLIFrameElement>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -16,32 +15,10 @@ function App() {
     setError('')
 
     try {
-      // Create a hidden iframe to load the URL content
-      const iframe = iframeRef.current
-      if (!iframe) return
-
-      iframe.onload = () => {
-        const content = iframe.contentDocument?.documentElement.outerHTML
-        if (!content) {
-          setError('Failed to load page content')
-          return
-        }
-
-        const opt = {
-          margin: 10,
-          filename: 'document.pdf',
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2 },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        }
-
-        html2pdf().from(content).set(opt).save()
-        setIsLoading(false)
-      }
-
-      iframe.src = url
+      await generatePdfFromUrl(url)
     } catch (err) {
-      setError('An error occurred while generating PDF')
+      setError('Impossibile generare il PDF. Verifica che l\'URL sia corretto e accessibile.')
+    } finally {
       setIsLoading(false)
     }
   }
@@ -55,7 +32,7 @@ function App() {
             URL to PDF Converter
           </h1>
           <p className="text-indigo-100 mt-1">
-            Convert any webpage to a downloadable PDF file
+            Converti qualsiasi pagina web in un file PDF scaricabile
           </p>
         </div>
 
@@ -63,7 +40,7 @@ function App() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-1">
-                Webpage URL
+                URL della pagina web
               </label>
               <input
                 type="url"
@@ -84,12 +61,12 @@ function App() {
               {isLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Processing...
+                  Elaborazione in corso...
                 </>
               ) : (
                 <>
                   <Download className="w-5 h-5" />
-                  Convert to PDF
+                  Converti in PDF
                 </>
               )}
             </button>
@@ -103,22 +80,14 @@ function App() {
         </div>
 
         <div className="p-6 bg-gray-50 border-t border-gray-200">
-          <h2 className="text-lg font-medium text-gray-800 mb-2">How it works</h2>
+          <h2 className="text-lg font-medium text-gray-800 mb-2">Come funziona</h2>
           <ol className="list-decimal list-inside space-y-1 text-gray-600">
-            <li>Enter the URL of the webpage you want to convert</li>
-            <li>Click "Convert to PDF" button</li>
-            <li>Wait for processing to complete</li>
-            <li>Your PDF will automatically download</li>
+            <li>Inserisci l'URL della pagina web che vuoi convertire</li>
+            <li>Clicca il pulsante "Converti in PDF"</li>
+            <li>Attendi il completamento dell'elaborazione</li>
+            <li>Il PDF verrà scaricato automaticamente</li>
           </ol>
         </div>
-
-        {/* Hidden iframe for loading content */}
-        <iframe
-          ref={iframeRef}
-          className="absolute opacity-0 w-0 h-0"
-          title="hidden-iframe"
-          sandbox="allow-scripts"
-        />
       </div>
     </div>
   )
