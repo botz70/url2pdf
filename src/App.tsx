@@ -117,7 +117,7 @@ function App() {
           ref={iframeRef}
           className="absolute opacity-0 w-0 h-0"
           title="hidden-iframe"
-          sandbox="allow-same-origin"
+          sandbox="allow-scripts"
         />
       </div>
     </div>
